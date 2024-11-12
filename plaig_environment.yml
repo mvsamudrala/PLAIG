@@ -1,0 +1,27 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: osx-arm64
+name: plaig_venv
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pandas
+  - numpy
+  - openpyxl
+  - scipy
+  - matplotlib
+  - scikit-learn
+  - pip
+  - networkx
+  - pytorch
+  - scikit-learn
+  - scipy
+  - biopython
+  - pip:
+      - biopandas
+      - prody
+      - openbabel
+      - rdkit
+      - torch-geometric
+
