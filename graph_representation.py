@@ -890,12 +890,7 @@ def create_submol(pocket_file, chains_residues_to_include, output_file):
 
     select = CustomSelect(chains_residues_to_include)
 
-    PDB.PDBIO().save(io, select)
-
-    pdb_block = io.getvalue()
-    io.close()
-
-    return pdb_block
+    io.save(output_file, select)
 
 
 def pl_complex_to_graph(pocket_file, ligand_file, pocket_pdbqt_file, ligand_pdbqt_file, threshold):
@@ -930,10 +925,13 @@ def pl_complex_to_graph(pocket_file, ligand_file, pocket_pdbqt_file, ligand_pdbq
     protein_name = os.path.splitext(os.path.basename(pocket_file))[0]
     print(protein_name)
     print(chain_residues)
-    submol_block = create_submol(pocket_file, chain_residues, submol_file)
+    submol_directory = os.path.join(os.getcwd(), "Protein_Pockets")
+    os.mkdir(submol_directory, exist_ok=True)
+    submol_file = os.path.join(submol_directory, f"{protein_name}_submol.pdb")
+    create_submol(pocket_file, chain_residues, submol_file)
     print("Done creating submol")
 
-    pocket = Chem.MolFromPDBBlock(submol_block)
+    pocket = Chem.MolFromPDBFile(submol_file)
     pocket_conf = pocket.GetConformer()
     pocket_positions = pocket_conf.GetPositions()
 
