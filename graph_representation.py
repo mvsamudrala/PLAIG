@@ -926,7 +926,7 @@ def pl_complex_to_graph(pocket_file, ligand_file, pocket_pdbqt_file, ligand_pdbq
     print(protein_name)
     print(chain_residues)
     submol_directory = os.path.join(os.getcwd(), "Protein_Pockets")
-    os.mkdir(submol_directory, exist_ok=True)
+    os.makedirs(submol_directory, exist_ok=True)
     submol_file = os.path.join(submol_directory, f"{protein_name}_submol.pdb")
     create_submol(pocket_file, chain_residues, submol_file)
     print("Done creating submol")
