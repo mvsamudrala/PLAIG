@@ -83,8 +83,8 @@ def run_model(complex_files):
         print(ligand_pdbqt_path)
         print()
         try:
-            graph = graph_representation.pl_complex_to_graph(protein_pdb, ligand_pdb,
-                                                             protein_pdbqt, ligand_pdbqt,
+            graph = graph_representation.pl_complex_to_graph(protein_pocket_path, ligand_path,
+                                                             protein_pocket_pdbqt_path, ligand_pdbqt_path,
                                                              distance_cutoff)
             if len(graph.nodes) == 0:
                 no_nodes_count += 1
