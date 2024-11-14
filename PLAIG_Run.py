@@ -168,6 +168,7 @@ def run_model(complex_files):
         print(f"Predicted Binding Affinity in -log(Kd/Ki): {log_prediction}")
         print(f"Predicted Binding Affiinity in uM: {um_prediction}")
     end = time.time()
+    print()
     print(f"Runtime: {end - start}")
 
 
