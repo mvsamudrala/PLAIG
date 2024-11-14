@@ -162,7 +162,7 @@ def run_model(complex_files):
         protein_labels.append(pdb_list[0])
         ligand_labels.append(pdb_list[1])
         log_prediction = stack_predictions[i]
-        um_prediction = 10**(-1 * float(stack_predictions)) * (10**6)
+        um_prediction = 10**(-1 * float(log_prediction)) * (10**6)
         print()
         print(f"Receptor: {pdb_list[0]}, Ligand: {pdb_list[1]}")
         print(f"Predicted Binding Affinity in -log(Kd/Ki): {log_prediction}")
