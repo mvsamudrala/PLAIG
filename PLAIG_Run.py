@@ -54,114 +54,117 @@ def prepare_data(complex_graph, pdb_code):
     return data
 
 
-def run_model(protein_pdbs, protein_pdbqts, ligand_pdbs, ligand_pdbqts):
-    file_lengths = [len(protein_pdbs), len(protein_pdbqts), len(ligand_pdbs), len(ligand_pdbqts)]
-    if all(length == file_lengths[0] for length in file_lengths):
-        start = time.time()
-        normalization_statistics_file = "combined_set_normalization_statistics.pkl"
-        with open(normalization_statistics_file, 'rb') as file:
-            normalization_statistics = pickle.load(file)
-        warnings.filterwarnings('ignore')
-        cannot_read_mols = []
-        count = 0
-        distance_cutoff = 3
-        pre_dataset = []
-        all_ligand_features = []
-        all_pocket_features = []
-        dataset = []
-        no_nodes_count = 0
-        for protein_pdb, protein_pdbqt, ligand_pdb, ligand_pdbqt in zip(protein_pdbs, protein_pdbqts, ligand_pdbs, ligand_pdbqts):
-            print(count)
-            protein_name = os.path.splitext(os.path.basename(protein_pdb))[0]
-            print(protein_name)
-            ligand_name = os.path.splitext(os.path.basename(ligand_pdb))[0]
-            print(ligand_name)
-            try:
-                graph = graph_representation.pl_complex_to_graph(protein_pdb, ligand_pdb,
-                                                                 protein_pdbqt, ligand_pdbqt,
-                                                                 distance_cutoff)
-                if len(graph.nodes) == 0:
-                    no_nodes_count += 1
-                    print(f"Graph has no nodes, #{no_nodes_count}")
-                    continue
-                pre_dataset.append((graph, (protein_name, ligand_name)))
-                print(graph.graph["ligand_attr"])
-                all_ligand_features.append(graph.graph["ligand_attr"])
-                print(graph.graph["pocket_attr"])
-                all_pocket_features.append(graph.graph["pocket_attr"])
-
-            except Exception as e:
-                cannot_read_mols.append((protein_name, ligand_name))
-                print(f"Cannot read {protein_name}, {ligand_name} file: {e}")
-            count += 1
+def run_model(complex_files):
+    start = time.time()
+    normalization_statistics_file = "combined_set_normalization_statistics.pkl"
+    with open(normalization_statistics_file, 'rb') as file:
+        normalization_statistics = pickle.load(file)
+    warnings.filterwarnings('ignore')
+    cannot_read_mols = []
+    count = 0
+    distance_cutoff = 3
+    pre_dataset = []
+    all_ligand_features = []
+    all_pocket_features = []
+    dataset = []
+    no_nodes_count = 0
+    for protein_pdb, protein_pdbqt, ligand_pdb, ligand_pdbqt in complex_files:
+        protein_name = os.path.splitext(os.path.basename(list(protein_pdb.keys())[0]))[0]
+        print(protein_name)
+        protein_pocket_path = list(protein_pdb.keys())[0]
+        print(protein_pocket_path)
+        protein_pocket_pdbqt_path = list(protein_pdbqt.keys())[0]
+        print(protein_pocket_pdbqt_path)
+        ligand_name = os.path.splitext(os.path.basename(list(ligand_pdb.keys())[0]))[0]
+        print(ligand_name)
+        ligand_path = list(ligand_pdb.keys())[0]
+        print(ligand_path)
+        ligand_pdbqt_path = list(ligand_pdbqt.keys())[0]
+        print(ligand_pdbqt_path)
         print()
-        all_ligand_features_normalized, all_pocket_features_normalized = normalize_graph_features(all_ligand_features,
-                                                                                                  all_pocket_features,
-                                                                                                  normalization_statistics)
-        for index, (graph, (protein_name, ligand_name)) in enumerate(pre_dataset):
-            graph.graph["ligand_attr"] = all_ligand_features_normalized[index]
+        try:
+            graph = graph_representation.pl_complex_to_graph(protein_pdb, ligand_pdb,
+                                                             protein_pdbqt, ligand_pdbqt,
+                                                             distance_cutoff)
+            if len(graph.nodes) == 0:
+                no_nodes_count += 1
+                print(f"Graph has no nodes, #{no_nodes_count}")
+                continue
+            pre_dataset.append((graph, (protein_name, ligand_name)))
             print(graph.graph["ligand_attr"])
-            graph.graph["pocket_attr"] = all_pocket_features_normalized[index]
+            all_ligand_features.append(graph.graph["ligand_attr"])
             print(graph.graph["pocket_attr"])
-            graph_data = prepare_data(graph, f"{protein_name}, {ligand_name}")
-            print(f"Data object: {graph_data}")
-            print(f'Number of nodes: {graph_data.num_nodes}')
-            print(f'Number of edges: {graph_data.num_edges}')
-            print(f'Average node degree: {graph_data.num_edges / graph_data.num_nodes:.2f}')
-            print(f'Has isolated nodes: {graph_data.has_isolated_nodes()}')
-            print(f'Has self-loops: {graph_data.has_self_loops()}')
-            print(f'Is undirected: {graph_data.is_undirected()}')
-            print()
-            dataset.append(graph_data)
-        print(len(dataset))
-        print("Done creating graphs for each protein-ligand complex, moving on to generating embeddings with GNN...")
+            all_pocket_features.append(graph.graph["pocket_attr"])
 
-        num_hidden_channels = 256
-        batch_size = 32
-        num_layers = 4
-        dropout_rate = 0.2
+        except Exception as e:
+            cannot_read_mols.append((protein_name, ligand_name))
+            print(f"Cannot read {protein_name}, {ligand_name} file: {e}")
+        count += 1
+    print()
+    all_ligand_features_normalized, all_pocket_features_normalized = normalize_graph_features(all_ligand_features,
+                                                                                              all_pocket_features,
+                                                                                              normalization_statistics)
+    for index, (graph, (protein_name, ligand_name)) in enumerate(pre_dataset):
+        graph.graph["ligand_attr"] = all_ligand_features_normalized[index]
+        print(graph.graph["ligand_attr"])
+        graph.graph["pocket_attr"] = all_pocket_features_normalized[index]
+        print(graph.graph["pocket_attr"])
+        graph_data = prepare_data(graph, f"{protein_name}, {ligand_name}")
+        print(f"Data object: {graph_data}")
+        print(f'Number of nodes: {graph_data.num_nodes}')
+        print(f'Number of edges: {graph_data.num_edges}')
+        print(f'Average node degree: {graph_data.num_edges / graph_data.num_nodes:.2f}')
+        print(f'Has isolated nodes: {graph_data.has_isolated_nodes()}')
+        print(f'Has self-loops: {graph_data.has_self_loops()}')
+        print(f'Is undirected: {graph_data.is_undirected()}')
+        print()
+        dataset.append(graph_data)
+    print(len(dataset))
+    print("Done creating graphs for each protein-ligand complex, moving on to generating embeddings with GNN...")
 
-        test_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-        model = GNN(hidden_channels=num_hidden_channels, num_layers=num_layers, dropout_rate=dropout_rate,
-                    num_node_features=40, num_edge_features=11, num_ligand_features=88, num_pocket_features=74)
+    num_hidden_channels = 256
+    batch_size = 32
+    num_layers = 4
+    dropout_rate = 0.2
 
-        model.load_state_dict(torch.load("GNN_Model7.pth"))
-        print(model)
-        model.eval()
-        embeddings = []
-        pdb_codes = []
-        count = 0
-        with torch.no_grad():
-            for d in test_loader:
-                print(count)
-                out = model(d.x, d.edge_index, d.edge_attr, d.batch, d.ligand_attr, d.pocket_attr, True)
-                out_array = out.cpu().detach().numpy()
-                if not np.isnan(out_array).any():
-                    embeddings.append(out.cpu().detach().numpy())
-                    pdb_codes.append(d.name)
-                    print(out_array)
-                count += 1
+    test_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    model = GNN(hidden_channels=num_hidden_channels, num_layers=num_layers, dropout_rate=dropout_rate,
+                num_node_features=40, num_edge_features=11, num_ligand_features=88, num_pocket_features=74)
 
-        embeddings = np.vstack(embeddings)
-        pdb_codes = np.hstack(pdb_codes)
-        print(embeddings)
+    model.load_state_dict(torch.load("PLAIG_Model.pth"))
+    print(model)
+    model.eval()
+    embeddings = []
+    pdb_codes = []
+    count = 0
+    with torch.no_grad():
+        for d in test_loader:
+            print(count)
+            out = model(d.x, d.edge_index, d.edge_attr, d.batch, d.ligand_attr, d.pocket_attr, True)
+            out_array = out.cpu().detach().numpy()
+            if not np.isnan(out_array).any():
+                embeddings.append(out.cpu().detach().numpy())
+                pdb_codes.append(d.name)
+                print(out_array)
+            count += 1
 
-        stack_model = joblib.load("Stacking_Regressor7.joblib")
-        stack_predictions = stack_model.predict(embeddings)
-        protein_labels = []
-        ligand_labels = []
-        for i in range(len(stack_predictions)):
-            pdb_string = pdb_codes[i]
-            pdb_list = pdb_string.split(", ")
-            protein_labels.append(pdb_list[0])
-            ligand_labels.append(pdb_list[1])
-            print(f"Receptor: {pdb_list[0]}, Ligand: {pdb_list[1]}, Predicted: {stack_predictions[i]}")
-        end = time.time()
-        print(end - start)
+    embeddings = np.vstack(embeddings)
+    pdb_codes = np.hstack(pdb_codes)
+    print(embeddings)
 
-    else:
-        print("Not all input lists are the same length. Please make sure each protein-ligand complex has the required "
-              "files input into the model.")
+    stack_model = joblib.load("PLAIG_Stacking.joblib")
+    stack_predictions = stack_model.predict(embeddings)
+    protein_labels = []
+    ligand_labels = []
+    for i in range(len(stack_predictions)):
+        pdb_string = pdb_codes[i]
+        pdb_list = pdb_string.split(", ")
+        protein_labels.append(pdb_list[0])
+        ligand_labels.append(pdb_list[1])
+        print(f"Receptor: {pdb_list[0]}, Ligand: {pdb_list[1]}, Predicted: {stack_predictions[i]}")
+    end = time.time()
+    print(end - start)
+
 
 
 
