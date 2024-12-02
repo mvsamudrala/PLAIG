@@ -11,7 +11,7 @@ st.markdown("<p style='text-align: center; font-size: 24px'>BINANA (BINding ANAl
             "with binding affinity predictions. This documentation page will take you deeper into the different kinds "
             "of intermolecular interactions that BINANA computes and how we use these interaction features in our graph "
             "representation of the protein-ligand complex.</p>", unsafe_allow_html=True)
-st.image("/Users/mvsamudrala/BindingAffinityGNN/PLAIG_GUI/BINANA.png")
+st.image("BINANA.png")
 st.markdown("<p style='text-align: left; font-size: 20px'><b>Electrostatic Energies:</b> This refers to the potential energy "
             "stored between two atoms due to the separation of charges. BINANA natively returns a list of the summed "
             "electrostatic energies between different atoms, not the individual electrostatic energy between each "

@@ -5,7 +5,7 @@ st.markdown("<p style='text-align: center; font-size: 24px'>This section contain
             "graphs of the protein-ligand complex before binding affinity prediction with PLAIG. There are three main "
             "steps when generating protein-ligand graphs that we follow: Protein-Pocket Extraction, Feature Extraction, "
             "and Graph Creation. Please read below for an in-depth explanation of the listed steps.</p>", unsafe_allow_html=True)
-st.image("/Users/mvsamudrala/BindingAffinityGNN/PLAIG_GUI/Substructure Example.png")
+st.image("Substructure Example.png")
 st.markdown("<p style='text-align: left; font-size: 20px'><b>Protein-Pocket Extraction:</b> Before creating graphs, "
             "we extract and store the protein binding pocket from the original protein .pdb file. This is to streamline "
             "the binding affinity prediction process, as residues not involved with binding interactions "
@@ -56,5 +56,5 @@ st.markdown("<p style='text-align: left; font-size: 20px'><b>Graph Creation:</b>
             "Networkx graph.graph dictionary. After the graph creation process is completed, all features are "
             "normalized using the z-score normalization technique. The finalized graph is returned to the main "
             "algorithm and converted into a Pytorch Data object for use in PLAIG's hybridized GNN model.</p>", unsafe_allow_html=True)
-st.image("/Users/mvsamudrala/BindingAffinityGNN/PLAIG_GUI/Graph Representation.png")
+st.image("Graph Representation.png")
 

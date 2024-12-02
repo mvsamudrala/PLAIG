@@ -9,7 +9,7 @@ st.markdown("<p style='text-align: center; font-size: 24px'>PLAIG is a GNN-based
             "you will be able to test PLAIG's binding affinity prediction model by submitting your own protein-ligand "
             "complex in .pdb and .pdbqt files. You can read the citation listed below for background information on "
             "PLAIG before navigating through this webpage.</p>", unsafe_allow_html=True)
-st.image("/Users/mvsamudrala/BindingAffinityGNN/PLAIG_GUI/GNN Model Framework.png")
+st.image("GNN Model Framework.png")
 st.markdown("<p style='text-align: left; font-size: 20px'><b>Citations:</b><br> In pre-publication stage.</p>", unsafe_allow_html=True)
 
 
