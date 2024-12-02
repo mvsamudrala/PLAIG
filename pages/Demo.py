@@ -13,7 +13,7 @@ st.markdown("<h1 style='text-align: center;'>PLAIG Demo</h1>", unsafe_allow_html
 st.markdown('<div style="text-align: center;"><a href="https://github.com/mvsamudrala/PLAIG/tree/main/demo_files" target="_blank">Click here '
             'to download example files for demo testing.</a>', unsafe_allow_html=True)
 form = st.form(key="Options")
-complex_files = form.file_uploader("Submit protein and ligand files (1. protein.pdb, 2. protein.pdbqt, 3. ligand.pdb, 4. ligand.pdbqt)", accept_multiple_files=True)
+complex_files = form.file_uploader("Submit protein and ligand files in this order (1. protein.pdb, 2. protein.pdbqt, 3. ligand.pdb, 4. ligand.pdbqt)", accept_multiple_files=True)
 complex_files_paths = []
 count = 1
 if complex_files:
