@@ -57,7 +57,7 @@ def prepare_data(complex_graph, pdb_code):
 def run_model(complex_files):
     start = time.time()
     predictions = []
-    normalization_statistics_file = "combined_set_normalization_statistics.pkl"
+    normalization_statistics_file = "combined_drugs_2_normalization_statistics.pkl"
     with open(normalization_statistics_file, 'rb') as file:
         normalization_statistics = pickle.load(file)
     warnings.filterwarnings('ignore')
@@ -134,7 +134,7 @@ def run_model(complex_files):
     model = GNN(hidden_channels=num_hidden_channels, num_layers=num_layers, dropout_rate=dropout_rate,
                 num_node_features=40, num_edge_features=11, num_ligand_features=88, num_pocket_features=74)
 
-    model.load_state_dict(torch.load("PLAIG_Model.pth"))
+    model.load_state_dict(torch.load("GNN_Model8.pth"))
     print(model)
     model.eval()
     embeddings = []
@@ -155,7 +155,7 @@ def run_model(complex_files):
     pdb_codes = np.hstack(pdb_codes)
     print(embeddings)
 
-    stack_model = joblib.load("PLAIG_Stacking.joblib")
+    stack_model = joblib.load("Stacking_Regressor8.joblib")
     stack_predictions = stack_model.predict(embeddings)
     protein_labels = []
     ligand_labels = []
