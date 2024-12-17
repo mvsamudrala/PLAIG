@@ -12,6 +12,7 @@ st.markdown("<p style='text-align: center; font-size: 24px'>BINANA (BINding ANAl
             "of intermolecular interactions that BINANA computes and how we use these interaction features in our graph "
             "representation of the protein-ligand complex.</p>", unsafe_allow_html=True)
 st.image("pages/BINANA.png")
+st.markdown("<p style='text-align: center; font-size: 20px'>Visualization of Protein-Ligand Interactions From BINANA's Webpage</p>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: left; font-size: 20px'><b>Electrostatic Energies:</b> This refers to the potential energy "
             "stored between two atoms due to the separation of charges. BINANA natively returns a list of the summed "
             "electrostatic energies between different atoms, not the individual electrostatic energy between each "

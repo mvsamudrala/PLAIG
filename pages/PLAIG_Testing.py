@@ -12,7 +12,16 @@ from io import StringIO
 
 current_directory = os.getcwd()
 st.markdown("<h1 style='text-align: center;'>PLAIG Testing</h1>", unsafe_allow_html=True)
-
+st.markdown("<p style='text-align: center; font-size: 24px'>In this section, you will be able to test PLAIG's binding "
+            "affinity predictions on pre-saved data, as well as upload your own files for prediction. There are "
+            "three different options to choose from:</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: left; font-size: 20px'>1. General and Refined Set Demo: This demo allows you to "
+            "submit files from the PDBbindv.2020 general and refined sets. These protein-ligand complexes are ones "
+            "that were used when developing PLAIG, so the model is relatively familiar with these files. Since the "
+            "general and refined sets are too large to store on this "
+            "webpage, you <b>must click the link in the dropdown</b> to download files and read the directions for the demo. The output from "
+            "this dropdown will give the predicted binding affinity and the experimentally-determined binding affinity "
+            "for comparison.</p>", unsafe_allow_html=True)
 # First expander (General vs Refined set)
 with st.expander("General and Refined Set Demo"):
     general_index_file = "pages/pdb_key_general"
@@ -76,7 +85,7 @@ with st.expander("General and Refined Set Demo"):
                         nx.draw(graph, with_labels=True, node_color=node_colors, edge_color="black", font_weight="bold",
                                 node_size=500, width=3)
                         caption = "Visualization of protein-ligand graph with ligand atoms in blue and protein atoms in pink"
-                        plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=18,
+                        plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=16,
                                     family='sans-serif')
                         st.pyplot(plt)
                         plt.clf()
@@ -97,7 +106,7 @@ with st.expander("General and Refined Set Demo"):
                         nx.draw(graph, with_labels=True, node_color=node_colors, edge_color="black", font_weight="bold",
                                 node_size=500, width=3)
                         caption = "Visualization of protein-ligand graph with ligand atoms in blue and protein atoms in pink"
-                        plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=18,
+                        plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=16,
                                     family='sans-serif')
                         st.pyplot(plt)
                         plt.clf()
@@ -107,46 +116,98 @@ with st.expander("General and Refined Set Demo"):
                     except Exception as e:
                         st.warning(f"This PDB code is not available in the {dataset}, please choose the other set.")
 
-
+st.markdown("<p style='text-align: left; font-size: 20px'>2. Pre-Docked Files Demo: Although PLAIG cannot yet predict "
+            "the affinity of undocked complexes, its binding affinity prediction accuracy is on par with or better "
+            "than existing docking algorithms. This demo showcases PLAIG's ability to predict the binding affinity of "
+            "virtually-docked protein-ligand complexes. Inside this dropdown, you can predict the affinity from a list "
+            "of receptor-ligand pairs that have been docked with AutoDock Vina. The final predictions will display the "
+            "predicted affinity from PLAIG, the predicted affinity from AutoDock Vina "
+            "(converted from free energy), and the experimental value.</p>", unsafe_allow_html=True)
 # Second expander (Docked set demo)
 with st.expander("Pre-Docked Files Demo"):
-    st.markdown('<div style="text-align: center; font-size: 14px"><a href="https://github.com/mvsamudrala/PLAIG/tree/main/example_docked_files" target="_blank">Click here '
-                'to download pre-docked protein-ligand complexes for demo testing.</a>', unsafe_allow_html=True)
-    form2 = st.form(key="Options2")
-    complex_files = form2.file_uploader("Choose your pre-docked files", accept_multiple_files=True)
-    submitted2 = form2.form_submit_button("Submit Files")
-    complex_files_paths = []
-    count = 1
-    if complex_files:
-        if len(complex_files) > 4:
-            st.warning("You can only upload up to 4 files.")
-        else:
-            for file in complex_files:
-                form2.write(f"File name: {count}. {file.name}")
-                new_file_path = os.path.join(current_directory, file.name)
-                with open(new_file_path, 'wb') as f:
-                    f.write(file.getbuffer())
-                complex_files_paths.append(new_file_path)
-                count += 1
-            if submitted2:
-                complex_files_paths = [tuple(complex_files_paths[i:i + 4]) for i in range(0, len(complex_files_paths), 4)]
-                prediction, graph, color_cutoff = PLAIG_Run.run_model(complex_files_paths)
-                node_colors = ["lightblue" if node < color_cutoff else "pink" for node in graph.nodes()]
-                plt.figure(figsize=(8, 6), dpi=600)
-                nx.draw(graph, with_labels=True, node_color=node_colors, edge_color="black", font_weight="bold", node_size=500, width=3)
-                caption = "Visualization of protein-ligand graph with ligand atoms in blue and protein atoms in pink"
-                plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=18, family='sans-serif')
-                st.pyplot(plt)
-                plt.clf()
-                st.markdown(
-                    f"<p style='text-align: center; color: red; font-size: 24px'>{prediction[0]}.</p>",
-                    unsafe_allow_html=True)
+    # st.markdown('<div style="text-align: center; font-size: 14px"><a href="https://github.com/mvsamudrala/PLAIG/tree/main/example_docked_files" target="_blank">Click here '
+    #             'to download pre-docked protein-ligand complexes for demo testing.</a>', unsafe_allow_html=True)
+    # form2 = st.form(key="Options2")
+    # st.markdown(f"<p style='text-align: center; font-size: 16px'>Which receptor would you like to test?</p>", unsafe_allow_html=True)
+    receptor = st.radio("Which receptor would you like to test?", ["Androgen Receptor (AR)", "Chimeric Antigen Receptor (CAR)"])
+    # st.markdown(f"<p style='text-align: center; font-size: 16px'>Which ligand would you like to test in complex with the {receptor}?</p>",
+    #             unsafe_allow_html=True)
+    affinity_key = {"DHT": [8.65, 8.58], "Flutamide": [7.10, 4.11], "MethylTestosterone": [7.80, 7.77],
+                    "R1881": [8.51, 8.51], "Spironolactone": [6.16, 6.16], "Testosterone": [7.80, 7.77],
+                    "TolfenamicAcid": [4.33, 4.18], "CINPA1": [7.15, 5.87], "CITCO": [7.31, 6.45],
+                    "Clotrimzaole": [6.15, 5.57], "PK11195": [6.10, 7.55], "TO901317": [5.66, 7.41]}
+    if receptor == "Androgen Receptor (AR)":
+        ligand = st.radio(f"Which ligand would you like to test in complex with the {receptor}?", ["DHT", "Flutamide", "Methyl Testosterone", "R1881", "Spironolactone", "Testosterone", "Tolfenamic Acid"])
+    else:
+        ligand = st.radio(f"Which ligand would you like to test in complex with the {receptor}?", ["CINPA1", "CITCO", "Clotrimazole", "PK11195", "TO901317"])
+    submitted2 = st.button("Submit")
+    if submitted2:
+        receptor_filename = receptor.split(" ")[-1].strip("()")
+        ligand_filename = ligand.replace(" ", "")
+        receptor_pdb_file = f"pages/example_docked_files/{receptor_filename}/pdb_hydrogenated/{receptor_filename}.pdb"
+        receptor_pdbqt_file = f"pages/example_docked_files/{receptor_filename}/pdbqt_hydrogenated/{receptor_filename}.pdbqt"
+        ligand_pdb_file = f"pages/example_docked_files/{receptor_filename}/pdb_hydrogenated/{ligand_filename}.pdb"
+        ligand_pdbqt_file = f"pages/example_docked_files/{receptor_filename}/pdbqt_hydrogenated/{ligand_filename}.pdbqt"
+        vina_affinity = 10 ** (-1 * affinity_key[ligand_filename][1]) * (10 ** 6)
+        experimental_affinity = 10 ** (-1 * affinity_key[ligand_filename][0]) * (10 ** 6)
+        complex_files_paths = [receptor_pdb_file, receptor_pdbqt_file, ligand_pdb_file, ligand_pdbqt_file]
+        complex_files_paths = [tuple(complex_files_paths[i:i + 4]) for i in
+                               range(0, len(complex_files_paths), 4)]
+        prediction, graph, color_cutoff = PLAIG_Run.run_model(complex_files_paths)
+        node_colors = ["lightblue" if node < color_cutoff else "pink" for node in graph.nodes()]
+        plt.figure(figsize=(8, 6), dpi=600)
+        nx.draw(graph, with_labels=True, node_color=node_colors, edge_color="black", font_weight="bold",
+                node_size=500, width=3)
+        caption = "Visualization of protein-ligand graph with ligand atoms in blue and protein atoms in pink"
+        plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=16,
+                    family='sans-serif')
+        st.pyplot(plt)
+        plt.clf()
+        st.markdown(
+            f"<p style='text-align: center; color: red; font-size: 24px'>{ligand} bound to {receptor}<br>{prediction[0]}<br>Binding Affinity from AutoDock Vina (μM): {round(vina_affinity, 3)}<br>Experimental Binding Affinity (μM): {round(experimental_affinity, 3)}</p>",
+            unsafe_allow_html=True)
+    # complex_files_paths = []
+    # count = 1
+    # if complex_files:
+    #     if len(complex_files) > 4:
+    #         st.warning("You can only upload up to 4 files.")
+    #     else:
+    #         for file in complex_files:
+    #             form2.write(f"File name: {count}. {file.name}")
+    #             new_file_path = os.path.join(current_directory, file.name)
+    #             with open(new_file_path, 'wb') as f:
+    #                 f.write(file.getbuffer())
+    #             complex_files_paths.append(new_file_path)
+    #             count += 1
+    #         if submitted2:
+    #             complex_files_paths = [tuple(complex_files_paths[i:i + 4]) for i in range(0, len(complex_files_paths), 4)]
+    #             prediction, graph, color_cutoff = PLAIG_Run.run_model(complex_files_paths)
+    #             node_colors = ["lightblue" if node < color_cutoff else "pink" for node in graph.nodes()]
+    #             plt.figure(figsize=(8, 6), dpi=600)
+    #             nx.draw(graph, with_labels=True, node_color=node_colors, edge_color="black", font_weight="bold", node_size=500, width=3)
+    #             caption = "Visualization of protein-ligand graph with ligand atoms in blue and protein atoms in pink"
+    #             plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=18, family='sans-serif')
+    #             st.pyplot(plt)
+    #             plt.clf()
+    #             st.markdown(
+    #                 f"<p style='text-align: center; color: red; font-size: 24px'>{prediction[0]}.</p>",
+    #                 unsafe_allow_html=True)
 
+st.markdown("<p style='text-align: left; font-size: 20px'>3. User Testing: Under this dropdown, you will be able to "
+            "submit your own <b>docked</b> protein-ligand complex files for binding affinity prediction. In order to "
+            "use this tool, you must have four files, two for the protein (.pdb and .pdbqt) and two for the ligand "
+            "(.pdb and .pdbqt). In addition, the protein and ligand 3D-coordinates must be fully hydrogenated and "
+            "cannot deviate from standard .pdb and .pdbqt file format rules. Please consider using the "
+            "'prepare_receptor4.py' and the 'prepare_ligand4.py' files from AutoDock's MGLTools library to hydrate and "
+            "clean up the virtual files. This tool is useful for determining an accurate binding affinity prediction "
+            "between the protein and ligand if docking has occurred correctly.</p>", unsafe_allow_html=True)
 # Third expander (User testing demo)
 with st.expander("User Testing"):
     st.markdown(f"<p style='text-align: center; font-size: 16px'>Submit your docked protein and ligand files in this "
                 f"order:<br>1. protein_name.pdb<br>2. protein_name.pdbqt<br>3. ligand_name.pdb<br> 4. "
                 f"ligand_name.pdbqt</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; font-size: 16px'><b>Reminder: The protein and ligand files must be "
+                f"docked in their proper binding conformation before using this tool.</b></p>", unsafe_allow_html=True)
     form3 = st.form(key="Options3")
     complex_files = form3.file_uploader("Choose your docked protein and ligand files", accept_multiple_files=True)
     submitted3 = form3.form_submit_button("Submit Files")
@@ -170,11 +231,11 @@ with st.expander("User Testing"):
                 plt.figure(figsize=(8, 6), dpi=600)
                 nx.draw(graph, with_labels=True, node_color=node_colors, edge_color="black", font_weight="bold", node_size=500, width=3)
                 caption = "Visualization of protein-ligand graph with ligand atoms in blue and protein atoms in pink"
-                plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=18, family='sans-serif')
+                plt.figtext(0.5, -0.10, caption, wrap=True, horizontalalignment='center', fontsize=16, family='sans-serif')
                 st.pyplot(plt)
                 plt.clf()
                 st.markdown(
-                    f"<p style='text-align: center; color: red; font-size: 24px'>{prediction[0]}.</p>",
+                    f"<p style='text-align: center; color: red; font-size: 24px'>{prediction[0]}</p>",
                     unsafe_allow_html=True)
 
 
