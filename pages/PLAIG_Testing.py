@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 from io import StringIO
+from openbabel import openbabel
 
 
 current_directory = os.getcwd()
@@ -195,17 +196,28 @@ with st.expander("Pre-Docked Files Demo"):
 
 st.markdown("<p style='text-align: left; font-size: 20px'>3. User Testing: Under this dropdown, you will be able to "
             "submit your own <b>docked</b> protein-ligand complex files for binding affinity prediction. In order to "
-            "use this tool, you must have four files, two for the protein (.pdb and .pdbqt) and two for the ligand "
-            "(.pdb and .pdbqt). In addition, the protein and ligand 3D-coordinates must be fully hydrogenated and "
-            "cannot deviate from standard .pdb and .pdbqt file format rules. Please consider using the "
-            "'prepare_receptor4.py' and the 'prepare_ligand4.py' files from AutoDock's MGLTools library to hydrate and "
-            "clean up the virtual files. This tool is useful for determining an accurate binding affinity prediction "
+            "use this tool, you must have at least 2 files, one for the protein (.pdb or .pdbqt) and one for the ligand "
+            "(.pdb or .pdbqt). Please follow the steps in the drop down below to clean up the files and submit them "
+            "for testing. This tool is useful for determining an "
+            "accurate binding affinity prediction "
             "between the protein and ligand if docking has occurred correctly.</p>", unsafe_allow_html=True)
 # Third expander (User testing demo)
 with st.expander("User Testing"):
+    st.markdown(f"<p style='text-align: center; font-size: 16px'><b>To clean up files, please follow this process "
+                f"before submission:</b></p>", unsafe_allow_html=True)
+    st.markdown('<div style="text-align: left; font-size: 16px"><a href="https://ccsb.scripps.edu/mgltools/downloads/" '
+                'target="_blank">1. Click here to download the MGLTools package version 1.5.7 <b>Windows</b> setup .exe</a>', unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: left; font-size: 16px'>2. Follow the process of the setup installer to download "
+                f"MGLTools. From there, you will need to run the following commands through command prompt to hydrate "
+                f"either the .pdb or .pdbqt files that you have.</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; font-size: 16px'>For the ligand: prepare_ligand - l 'ligand_name'.pdb "
+                f"(or .pdbqt) -v -o 'ligand_file'.pdbqt -A hydrogens -U lps -v</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; font-size: 16px'>For the protein: prepare_receptor -r "
+                f"'receptor_name'.pdb (or .pdbqt) -v -o 'receptor_name'.pdbqt -A hydrogens -U lps_waters -v</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: left; font-size: 16px'>3. Once you have your .pdbqt files that have been "
+                f"hydrogenated and cleaned up, submit these files down below.</p>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; font-size: 16px'>Submit your docked protein and ligand files in this "
-                f"order:<br>1. protein_name.pdb<br>2. protein_name.pdbqt<br>3. ligand_name.pdb<br> 4. "
-                f"ligand_name.pdbqt</p>", unsafe_allow_html=True)
+                f"order:<br>1. protein_name.pdbqt<br>2. ligand_name.pdbqt</p>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; font-size: 16px'><b>Reminder: The protein and ligand files must be "
                 f"docked in their proper binding conformation before using this tool.</b></p>", unsafe_allow_html=True)
     form3 = st.form(key="Options3")
@@ -214,17 +226,30 @@ with st.expander("User Testing"):
     complex_files_paths = []
     count = 1
     if complex_files:
-        if len(complex_files) > 4:
-            st.warning("You can only upload up to 4 files.")
+        if len(complex_files) > 2:
+            st.warning("You can only upload up to 2 files.")
         else:
-            for file in complex_files:
-                form3.write(f"File name: {count}. {file.name}")
-                new_file_path = os.path.join(current_directory, file.name)
-                with open(new_file_path, 'wb') as f:
-                    f.write(file.getbuffer())
-                complex_files_paths.append(new_file_path)
-                count += 1
             if submitted3:
+                for file in complex_files:
+                    form3.write(f"File name: {count}. {file.name}")
+                    new_file_path = os.path.join(current_directory, file.name)
+                    with open(new_file_path, 'wb') as f:
+                        f.write(file.getbuffer())
+
+                    name = os.path.splitext(os.path.basename(new_file_path))[0]
+                    ob_conversion = openbabel.OBConversion()
+                    ob_conversion.SetInAndOutFormats("pdbqt", "pdb")
+                    mol = openbabel.OBMol()
+                    ob_conversion.ReadFile(mol, new_file_path)
+                    new_pdb_path = os.path.join(current_directory, f"{name}.pdb")
+                    ob_conversion.WriteFile(mol, new_pdb_path)
+
+                    complex_files_paths.append(new_pdb_path)
+                    complex_files_paths.append(new_file_path)
+                    print(new_pdb_path)
+                    print(new_file_path)
+                    count += 1
+
                 complex_files_paths = [tuple(complex_files_paths[i:i + 4]) for i in range(0, len(complex_files_paths), 4)]
                 prediction, graph, color_cutoff = PLAIG_Run.run_model(complex_files_paths)
                 node_colors = ["lightblue" if node < color_cutoff else "pink" for node in graph.nodes()]
